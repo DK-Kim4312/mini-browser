@@ -5,9 +5,7 @@ A simple web crawler currently for wikipedia.
 ## How to use
  1. Clone the repository from GitHub
  2. run command in terminal
-```bash
-node index.js
-```
+### `node index.js`
 3. check the json files and see what you get!
 
 ## What it does
