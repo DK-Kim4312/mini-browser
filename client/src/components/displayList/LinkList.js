@@ -4,8 +4,6 @@ import { useState } from "react";
 //import { useSelector, useDispatch } from "react-redux";
 //import DATA from "../fetchData/constants";
 
-
-
 const PathObject = (props) => (
     <tr>
         <td>{props.title}</td>
@@ -13,7 +11,6 @@ const PathObject = (props) => (
         <td>{props.score}</td>
     </tr>
 );
-
 export default function LinkList() {
     const [records, setRecords] = useState([]);
     // This method fetches the records from the database.
@@ -25,12 +22,21 @@ export default function LinkList() {
         window.alert(message);
         return;
         }
-        const records = await response.json();
+        let records = await response.json();
+        //add sample to records
+        records = records.concat({
+        title: "sample",
+        link: "sample",
+        score: "sample",
+        });
+        
         setRecords(records);
     }
         getRecords();
         return;
     }, [records.length]);
+    
+    
 
     /* Must Add Middleware to use this
     const { linksData, isLoading } = useSelector((state) => state);
@@ -63,9 +69,13 @@ export default function LinkList() {
 
     */
     function showList() {
-        return records?.map((link) => (
-            <PathObject title={link.title} link={link.link} score={link.score} />
-        ));
+        console.log(records);
+        return records.map((link) => {
+            return(
+                <PathObject title={link.title} link={link.link} score={link.score} />
+            )
+        }
+        );
     }
     
 
