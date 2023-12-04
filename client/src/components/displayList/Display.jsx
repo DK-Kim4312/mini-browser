@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { DisplayWrapper } from './Display.style';
 import { useDispatch } from 'react-redux';
 import { HIDE_LIST } from '../../reducer/display';
+import LinkList from './LinkList';
 
 
 export default function Display() {
@@ -24,8 +25,7 @@ export default function Display() {
                         onClick={hideList} >Close</button>
                 </div>
                 <div className="content" >
-                    <p>Display Content</p>
-                    
+                    <LinkList />
                 </div>
             </div>
         </DisplayWrapper>
