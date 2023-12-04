@@ -1,6 +1,6 @@
 # mini-browser
 
-A simple web crawler currently for wikipedia.
+A browser with web crawler currently for wikipedia.
 
 ## How to use
  1. Clone the repository from GitHub
