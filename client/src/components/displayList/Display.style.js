@@ -12,26 +12,38 @@ export const DisplayWrapper = styled.div`
     justify-content: center;
     align-items: center;
     .container {
-        width:100%;
-        height: 100%;
-        max-width: 500px;
-        max-height: 500px;
+        width: 600px;
+        height: 600px;
         background-color: white;
         border-radius: 10px;
         padding: 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
     
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .close {
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+        }
     }
     .content {
         overflow: auto;
-        display: flex;
-        align-items: center;
+        .link {
+            margin-bottom: 10px;
+            a {
+                text-decoration: none;
+                color: black;
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
     }
 }
 
