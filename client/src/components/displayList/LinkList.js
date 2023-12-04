@@ -1,50 +1,39 @@
 import React from "react";
-import { useState, useEffect } from "react";
-
-
-const dbPath = "../../../../db/db.json";
-
+import { requestLinks } from "../fetchData/Data"
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import data from "../../../../db/data.json";
 const PathObject = (props) => (
     <tr>
-      <td>{props.link.title}</td>
-      <td>{props.link.link}</td>
+        <td>{props.link.title}</td>
+        <td>{props.link.link}</td>
     </tr>
-  );
+);
 
 export default function LinkList() {
-  const [links, setLinks] = useState([]);
+    const { linksData, isLoading } = useSelector((state) => state);
+    const dispatch = useDispatch();
 
-  useEffect(() => {
-    async function getLinks() {
-        fetch(dbPath)
-    .then((response) => response.json())
-      const response = await fetch(``);
-      if (!response.ok) {
-        const message = `An error occurred: ${response.statusText}`;
-        window.alert(message);
-        return;
-      }
-      const links = await response.json();
-      setLinks(links);
+    useEffect(() => {
+        dispatch(requestUsers(data));
+    }, []);
+
+
+    function showList() {
+        return linksData.map((link) => (
+            <PathObject link={link} key={link.title} score={link.score} />
+        ));
     }
-    getLinks();
-  }, []);
 
-  function showList() {
-    return links.map((link) => (
-      <PathObject link={link} key={link.title} score={link.score} />
-    ));
-  }
-
-  return (
-      <table className="list-links">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Link</th>
-          </tr>
-        </thead>
-        <tbody>{showList()}</tbody>
-      </table>
-  );
+    return (
+        <table className="list-links">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>{showList()}</tbody>
+        </table>
+    );
 }

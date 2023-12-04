@@ -7,7 +7,7 @@ const initialState = {
 }
 
 /**
- * Root reducer
+ * Display reducer
  * @param {*} state : current state
  * @param {*} action : action to be executed
  * @returns
