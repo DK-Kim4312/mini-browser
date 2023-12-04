@@ -3,6 +3,15 @@ const axios = require('axios');
 const fs = require('fs');
 
 
+dbName = "title-link-score";
+collectionName = "wikipedia";
+
+function hashCode(s) {
+    for (var i = 0, h = 0; i < s.length; i++)
+        h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    return h;
+}
+
 //wikipedia url
 const initUrl = 'https://en.wikipedia.org';
 
@@ -13,16 +22,9 @@ const initUrl = 'https://en.wikipedia.org';
 // 4. Find the next page url -> rank pages by reference
 // 5. Go to the next page and repeat
 
-let dbList = {
-    ["https://en.wikipedia.org/wiki/Computer_science"] : {
-        title : 'Computer Science',
-        score : 1,
-    }
-};
-
 let disallowedList = {
-    ["/wiki/MediaWiki:Spam-blacklist"] : {
-        'linkSegment' : '/wiki/MediaWiki:Spam-blacklist',
+    ["/wiki/MediaWiki:Spam-blacklist"]: {
+        'linkSegment': '/wiki/MediaWiki:Spam-blacklist',
     }
 };
 
@@ -37,7 +39,6 @@ let progressIndex = 0;
 const crawl = async (url) => {
     console.log(`Visiting ${url}`);
     console.log('Number of URL in queue: ', queue.length - progressIndex);
-
     try {
         var htmlDoc = await axios.get(url);
     } catch (e) {
@@ -46,23 +47,14 @@ const crawl = async (url) => {
     }
 
 
-    if(!htmlDoc.data) {
+    if (!htmlDoc.data) {
         await startNextQueue();
         return;
     }
 
     const $ = cheerio.load(htmlDoc.data); // conventional $ notation
     const links = $('a'); // get all links from the page
-    const title = $("h1").text();
-
-    if(dbList[url]) {
-        dbList[url].score += 1;
-    } else {
-        dbList[url] = {
-            title,
-            score : 1,
-        }
-    }
+    const title = $("h1").text(); // get title of the page
 
     // check if the url is allowed to be crawled
     const isAllowed = await checkRobotTXT(url);
@@ -78,33 +70,60 @@ const crawl = async (url) => {
 
         // if href starts with http or https
         if (href.startsWith('http://') || href.startsWith('https://')) {
-            checkVisitedBeforePush(href);
+            //create new data
+            newData = {
+                id: hashCode(url),
+                title: title,
+                link: url,
+                score: 1,
+            }
+            checkVisitedBeforePush(newData);
             return;
         }
 
         // if not, it is a relative link
         const originUrl = new URL(url).origin;
         const newUrl = originUrl + href;
-        checkVisitedBeforePush(newUrl);
+        //create new data
+        newData = {
+            id: hashCode(newUrl),
+            title: title,
+            link: newUrl,
+            score: 1,
+        }
+        checkVisitedBeforePush(newData);
     });
 
     if (queue[progressIndex]) {
         await startNextQueue();
     } else {
         console.log('Finished crawling');
-        console.log(dbList);
     }
 };
 
 /**
- * Check if the url has been visited before
- * If not, push it to the queue
- * @param {string} href 
+ * Check if the url is visited before check in mongodb
+ * @param {object} data
+ * @returns {boolean}
  */
-const checkVisitedBeforePush = (href) => {
-    if (!dbList[href]) {
-        queue.push(href);
+async function checkVisitedBeforePush(data){
+    await fetch(`http://localhost:3000/record/${data.id}`, {
+        method: "GET",
+    }, function (err, res) {
+        if (err) throw err;
+        if (res) {
+            if(res == null){
+                queue.push(data);
+            } else {
+                // update score
+                res.score += 1;
+                updateScore(res);
+            }
+        }
     }
+    );
+
+
 }
 
 /**
@@ -113,10 +132,9 @@ const checkVisitedBeforePush = (href) => {
 const startNextQueue = async () => {
     await timeout();
     crawl(queue[progressIndex]);
+    storeDb(queue[progressIndex]);
     progressIndex += 1;
-    if (progressIndex % 10 === 0) {
-        storeDb();
-    }
+
 }
 
 /**
@@ -126,18 +144,44 @@ const timeout = () => {
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve();
-        }, 500);
+        }, 300);
     })
 }
 
 /**
- * Store dbList in a file
+ * Store new data in mongodb
  */
-const storeDb = () => {
-    // store dbList in a file
-    const json = JSON.stringify(dbList);
-    fs.writeFileSync('./db.json', json);
+async function storeDb(data) {
+    await fetch(`http://localhost:3000/record/add`, {
+        method: "POST",
+        body: JSON.stringify(data),
+    }, function (err, res) {
+        if (err) throw err;
+        response.json(res);
+    }
+    );
 }
+
+/**
+ * Update score in mongodb
+ * @param {object} data
+ * @returns {boolean}
+ */
+async function updateScore(data) {
+    await fetch(`http://localhost:3000/update/${data.id}`, {
+        method: "POST",
+        body: JSON.stringify(data),
+    }, function (err, res) { 
+        if (err) throw err;
+        response.json(res);
+    }
+    );
+}
+
+
+
+
+
 
 /**
  * Check if the url is allowed to be crawled based on disallowedList
@@ -175,11 +219,11 @@ const storeRobotsTxt = async (mainUrl) => {
                 if (!disallowedUrl.includes('/wiki/')) {
                     //continue to next iteration
                     return;
-                 }
+                }
                 console.log('Disallowed url text', disallowedUrl);
                 // store disallowedList in a file
                 disallowedList[disallowedUrl] = {
-                    linkSegment : disallowedUrl,
+                    linkSegment: disallowedUrl,
                 }
                 const json = JSON.stringify(disallowedList);
                 fs.writeFileSync('./disallowed.json', json);
