@@ -22,6 +22,7 @@ export default function LinkList() {
         window.alert(message);
         return;
         }
+        console.log(response);
         let records = await response.json();
         //add sample to records
         records = records.concat({
