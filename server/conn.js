@@ -16,7 +16,7 @@ module.exports = {
       console.error(e);
     }
 
-    _db = client.db("schedule");
+    _db = client.db("title-link-score");
 
     return (_db === undefined ? false : true);
   },
